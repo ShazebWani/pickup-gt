@@ -1,10 +1,12 @@
 # API reference
 
-Base URL: set `BASE_URL` to either your local server (`http://localhost:3000`) or the deployed Render URL (`https://<your-service>.onrender.com`).
+Base URL: set `BASE_URL` to either your local server (`http://localhost:3000`) or the deployed Render URL. The deployed backend for this project is live at:
 
 ```bash
-export BASE_URL="https://<your-service>.onrender.com"
+export BASE_URL="https://pickup-gt-api.onrender.com"
 ```
+
+Every example below has been run against this exact deployed URL, including a full authenticated create → cancel → reject cycle (see `docs/DEBUGGING.md` and `docs/SUBMISSION.md`) — not just against localhost.
 
 All write endpoints require `Authorization: Bearer <Firebase ID token>`. To get a token for `curl` testing, call the Firebase Auth REST API with a test account's email/password and your Firebase Web API key:
 

@@ -64,7 +64,7 @@ You do **not** need to run `server/` locally. Point the app at my deployed Rende
 
 ```
 # in app/.env
-EXPO_PUBLIC_API_BASE_URL=[SHAZEB: fill in the live Render URL here once deployed — see docs/SUBMISSION.md "Known gaps," this is not live yet]
+EXPO_PUBLIC_API_BASE_URL=https://pickup-gt-api.onrender.com
 ```
 
 **Heads up:** Render's free tier spins the server down after inactivity. The **first** request after it's been idle can take up to ~60 seconds while it spins back up — the app has a timeout built in to accommodate this (`app/src/lib/api.ts`), so if a game-creation request seems to hang, give it a minute before assuming something's broken.

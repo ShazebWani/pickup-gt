@@ -3,7 +3,7 @@
 **Author:** Shazeb Wani
 **Repository:** https://github.com/ShazebWani/pickup-gt
 **Course:** [SHAZEB: fill in — course number/name]
-**Backend URL:** [SHAZEB: fill in once deployed — see "Known gaps" below, this is not yet live]
+**Backend URL:** https://pickup-gt-api.onrender.com ([`/health`](https://pickup-gt-api.onrender.com/health) — verified live and responding `200`)
 
 ---
 
@@ -53,9 +53,9 @@ The problem it addresses: court/field coordination at GT currently happens in sc
 | 2 | Build a sample app running on a **physical device**, accepting user input or environmental stimulation | The full app above, run via Expo Go on a physical iPhone/Android phone (not a simulator — see `docs/setup.md` §1, "you'll need a physical phone"). User input: sign-up/login forms, game creation form, join/leave/cancel actions. Environmental stimulation: the device's real GPS location is read (`expo-location`) and used to sort/distance-annotate the games list. | `app/src/lib/useLocation.ts`, `app/src/lib/geo.ts`, `app/app/(tabs)/index.tsx` |
 | 3 | Check code into version control; use repo features to track tasks, bugs, and resources | Public GitHub repo with descriptive commits, custom issue templates for bugs and tasks, and 14 issues opened and labeled (one per original build-order step, plus ongoing work) with 10 already closed as their step shipped. | https://github.com/ShazebWani/pickup-gt, `.github/ISSUE_TEMPLATE/bug.yml`, `.github/ISSUE_TEMPLATE/task.yml`, issues #1–#14 |
 | 4 | A partner checks out the code, builds, changes, tests, deploys, and checks back in — and vice versa | **Not yet done.** Scoped and ready: the partner's assigned task is issue [#14](https://github.com/ShazebWani/pickup-gt/issues/14) ("force light mode"), and [`docs/PARTNER_SETUP.md`](PARTNER_SETUP.md) is written for a partner who's never seen the repo. The narrative doc is scaffolded and waiting to be filled in after the exchange. | `docs/PARTNER_SETUP.md`, issue #14, [`docs/GIT_NARRATIVE.md`](GIT_NARRATIVE.md) (skeleton) |
-| 5 | Deploy a web service that processes/stores/exchanges data with the app via a REST API, backend in version control | The Express REST API (5 endpoints, Firebase-token auth, Firestore transactions, Open-Meteo integration) is fully built, version-controlled, and verified working locally (see `docs/DEBUGGING.md`). **It is not yet deployed to Render** — tracked as open issue [#5](https://github.com/ShazebWani/pickup-gt/issues/5), which explicitly notes this needs a Render account to be created. | `server/src/` (all committed in `a414e49`), issue #5, [`docs/api.md`](api.md) |
+| 5 | Deploy a web service that processes/stores/exchanges data with the app via a REST API, backend in version control | The Express REST API (5 endpoints, Firebase-token auth, Firestore transactions, Open-Meteo integration) is deployed live on Render and verified: every documented endpoint and status code (`200`/`401`/`404`/`409`, plus a full authenticated create→cancel→reject cycle) was tested directly against the deployed URL, not just locally. | Live: https://pickup-gt-api.onrender.com/health · Code: `server/src/` (committed in `a414e49`) · [`docs/api.md`](api.md) |
 
-**Overall status: items 1, 2, and 3 are done. Items 4 and 5 have the code and docs ready but the external steps (deploying, exchanging with a partner) have not happened yet.** This is the single most important gap in this submission — see "Known gaps" below.
+**Overall status: items 1, 2, 3, and 5 are done. Item 4 has the code and docs ready (`docs/PARTNER_SETUP.md`, issue #14) but the partner exchange itself has not happened yet.** This is the single most important gap remaining in this submission — see "Known gaps" below.
 
 ---
 
@@ -78,7 +78,7 @@ The problem it addresses: court/field coordination at GT currently happens in sc
 
 Being direct about what's not done, per the assignment's own guidance that documenting real state — including what didn't happen — is worth more than a polished story:
 
-1. **No live backend URL.** `server/` has never been deployed. Every reference to a Render URL in this repo's docs (`docs/setup.md`, `docs/api.md`, `README.md`) is a placeholder like `<your-service>.onrender.com`, not a real deployed address. Issue #5 tracks this and says so explicitly. This blocks requirement #5 from being fully satisfied and blocks testing `docs/api.md`'s `curl` examples against anything but `localhost`.
+1. ~~No live backend URL.~~ **Resolved.** `server/` is deployed to Render at https://pickup-gt-api.onrender.com, verified live (issue #5 closed). `docs/api.md`'s `curl` examples were tested directly against the deployed URL, including a full authenticated create/cancel cycle with a real (since-deleted) test account.
 2. **No partner exchange yet.** Requirement #4 has zero evidence beyond preparation (`docs/PARTNER_SETUP.md` and issue #14 exist and are ready to hand off). `docs/GIT_NARRATIVE.md` is a skeleton, not a narrative.
 3. **The UI/navigation polish work is uncommitted.** Everything described in the "UI and screen-flow experiments" row above exists in the working tree but has not been committed. `git log` currently has only 2 commits (`a414e49` initial scaffold, `e16d33a` devlog entry). Before this counts as evidence for a grader, it needs a real commit with a descriptive message.
 4. **Screenshots are not included in this document** — see the placeholder list below. None of these were captured by an AI assistant; a physical device is required.

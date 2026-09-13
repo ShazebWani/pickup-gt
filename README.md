@@ -2,7 +2,7 @@
 
 Pickup GT is a mobile app (React Native + Expo, running on physical iOS/Android phones via Expo Go) for organizing pickup sports around Georgia Tech campus: post that you're playing basketball, soccer, tennis, or whatever at a specific spot and time, and other students nearby see it live on a map and in a list and can join — rosters update in real time across every device, and each game shows the weather forecast for its start time so people know if it's about to rain. It exists because court/field coordination at GT currently happens in scattered group chats with no shared, live view of what's actually happening nearby right now.
 
-**Live backend:** [SHAZEB: fill in the deployed Render URL — not yet deployed, see `docs/SUBMISSION.md` "Known gaps" and open issue [#5](https://github.com/ShazebWani/pickup-gt/issues/5)]
+**Live backend:** https://pickup-gt-api.onrender.com ([`/health`](https://pickup-gt-api.onrender.com/health))
 
 **Status:** Phase 1 (MVP) — auth, game creation, live rosters, map, weather, distance sorting. See `Pickup-GT-PRD.md` for the full spec and `docs/devlog.md` for build history.
 
