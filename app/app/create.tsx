@@ -9,14 +9,17 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SPORTS, type Sport } from '../src/types';
 import { SportChip } from '../src/components/SportChip';
 import { VENUES, CAMPUS_REGION } from '../src/lib/venues';
 import { api, ApiError } from '../src/lib/api';
+import { colors, radius, spacing, pressedStyle } from '../src/theme';
 
 const MIN_CAPACITY = 2;
 const MAX_CAPACITY = 30;
@@ -89,94 +92,131 @@ export default function CreateGame() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.label}>Sport</Text>
-      <View style={styles.wrapRow}>
-        {SPORTS.map((s) => (
-          <SportChip key={s} sport={s} selected={sport === s} onPress={() => setSport(s)} />
-        ))}
-      </View>
-
-      <Text style={styles.label}>Spot</Text>
-      <View style={styles.wrapRow}>
-        {VENUES.map((v) => (
-          <Pressable
-            key={v.id}
-            onPress={() => selectVenue(v.id)}
-            style={[styles.venueChip, venueId === v.id && styles.venueChipSelected]}
-          >
-            <Text style={venueId === v.id ? styles.venueTextSelected : styles.venueText}>
-              {v.name}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      <Text style={styles.hint}>Or drop a pin for a custom spot:</Text>
-      <MapView
-        style={styles.map}
-        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
-        initialRegion={CAMPUS_REGION}
-        onPress={(e) => dropPin(e.nativeEvent.coordinate.latitude, e.nativeEvent.coordinate.longitude)}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
       >
-        {pin && <Marker coordinate={pin} />}
-        {selectedVenue && (
-          <Marker
-            coordinate={{ latitude: selectedVenue.lat, longitude: selectedVenue.lng }}
-            pinColor="#3aa15c"
+        <Section label="Sport">
+          <View style={styles.wrapRow}>
+            {SPORTS.map((s) => (
+              <SportChip key={s} sport={s} selected={sport === s} onPress={() => setSport(s)} />
+            ))}
+          </View>
+        </Section>
+
+        <Section label="Spot">
+          <View style={styles.wrapRow}>
+            {VENUES.map((v) => (
+              <Pressable
+                key={v.id}
+                onPress={() => selectVenue(v.id)}
+                style={({ pressed }) => [
+                  styles.venueChip,
+                  venueId === v.id && styles.venueChipSelected,
+                  pressedStyle(pressed),
+                ]}
+              >
+                <Text style={venueId === v.id ? styles.venueTextSelected : styles.venueText}>
+                  {v.name}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Text style={styles.hint}>Or drop a pin for a custom spot</Text>
+          <View style={styles.mapWrap}>
+            <MapView
+              style={styles.map}
+              provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+              initialRegion={CAMPUS_REGION}
+              onPress={(e) => dropPin(e.nativeEvent.coordinate.latitude, e.nativeEvent.coordinate.longitude)}
+            >
+              {pin && <Marker coordinate={pin} />}
+              {selectedVenue && (
+                <Marker
+                  coordinate={{ latitude: selectedVenue.lat, longitude: selectedVenue.lng }}
+                  pinColor={colors.success}
+                />
+              )}
+            </MapView>
+          </View>
+          {pin && (
+            <TextInput
+              style={styles.input}
+              placeholder="Name this spot (e.g. Behind Van Leer)"
+              placeholderTextColor={colors.textFaint}
+              value={spotName}
+              onChangeText={setSpotName}
+            />
+          )}
+        </Section>
+
+        <Section label="Start time">
+          <Pressable
+            style={({ pressed }) => [styles.input, styles.timeInput, pressedStyle(pressed)]}
+            onPress={() => setShowPicker(true)}
+          >
+            <Ionicons name="calendar-outline" size={18} color={colors.textMuted} />
+            <Text style={styles.timeText}>{startTime.toLocaleString()}</Text>
+          </Pressable>
+          {showPicker && (
+            <DateTimePicker
+              value={startTime}
+              mode="datetime"
+              minimumDate={new Date()}
+              onChange={(_, date) => {
+                setShowPicker(Platform.OS === 'ios');
+                if (date) setStartTime(date);
+              }}
+            />
+          )}
+        </Section>
+
+        <Section label="Details">
+          <Stepper
+            label="Duration (minutes)"
+            value={duration}
+            min={MIN_DURATION}
+            max={MAX_DURATION}
+            step={DURATION_STEP}
+            onChange={setDuration}
           />
-        )}
-      </MapView>
-      {pin && (
-        <TextInput
-          style={styles.input}
-          placeholder="Name this spot (e.g. Behind Van Leer)"
-          value={spotName}
-          onChangeText={setSpotName}
-        />
-      )}
+          <Stepper
+            label="Capacity"
+            value={capacity}
+            min={MIN_CAPACITY}
+            max={MAX_CAPACITY}
+            step={1}
+            onChange={setCapacity}
+          />
+        </Section>
 
-      <Text style={styles.label}>Start time</Text>
-      <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
-        <Text>{startTime.toLocaleString()}</Text>
-      </Pressable>
-      {showPicker && (
-        <DateTimePicker
-          value={startTime}
-          mode="datetime"
-          minimumDate={new Date()}
-          onChange={(_, date) => {
-            setShowPicker(Platform.OS === 'ios');
-            if (date) setStartTime(date);
-          }}
-        />
-      )}
+        <Pressable
+          style={({ pressed }) => [styles.submit, pressedStyle(pressed)]}
+          onPress={handleSubmit}
+          disabled={submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator color={colors.primaryText} />
+          ) : (
+            <Text style={styles.submitText}>Create game</Text>
+          )}
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
 
-      <Stepper
-        label="Duration (minutes)"
-        value={duration}
-        min={MIN_DURATION}
-        max={MAX_DURATION}
-        step={DURATION_STEP}
-        onChange={setDuration}
-      />
-      <Stepper
-        label="Capacity"
-        value={capacity}
-        min={MIN_CAPACITY}
-        max={MAX_CAPACITY}
-        step={1}
-        onChange={setCapacity}
-      />
-
-      <Pressable style={styles.submit} onPress={handleSubmit} disabled={submitting}>
-        {submitting ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.submitText}>Create game</Text>
-        )}
-      </Pressable>
-    </ScrollView>
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionLabel}>{label}</Text>
+      {children}
+    </View>
   );
 }
 
@@ -197,20 +237,20 @@ function Stepper({
 }) {
   return (
     <View style={styles.stepperRow}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.stepperLabel}>{label}</Text>
       <View style={styles.stepperControls}>
         <Pressable
-          style={styles.stepperButton}
+          style={({ pressed }) => [styles.stepperButton, pressedStyle(pressed)]}
           onPress={() => onChange(Math.max(min, value - step))}
         >
-          <Text style={styles.stepperButtonText}>-</Text>
+          <Ionicons name="remove" size={18} color={colors.text} />
         </Pressable>
         <Text style={styles.stepperValue}>{value}</Text>
         <Pressable
-          style={styles.stepperButton}
+          style={({ pressed }) => [styles.stepperButton, pressedStyle(pressed)]}
           onPress={() => onChange(Math.min(max, value + step))}
         >
-          <Text style={styles.stepperButtonText}>+</Text>
+          <Ionicons name="add" size={18} color={colors.text} />
         </Pressable>
       </View>
     </View>
@@ -218,46 +258,73 @@ function Stepper({
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, gap: 8, paddingBottom: 60 },
-  label: { fontWeight: '700', marginTop: 16, marginBottom: 6 },
-  hint: { color: '#666', fontSize: 13, marginTop: 12 },
-  wrapRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  container: { padding: spacing.lg, paddingBottom: 60, backgroundColor: colors.bg },
+  section: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  sectionLabel: {
+    fontWeight: '700',
+    fontSize: 13,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: spacing.sm,
+  },
+  hint: { color: colors.textMuted, fontSize: 13, marginTop: spacing.md, marginBottom: spacing.xs },
+  wrapRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   venueChip: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
   },
-  venueChipSelected: { backgroundColor: '#1b1b1b', borderColor: '#1b1b1b' },
-  venueText: { fontSize: 13 },
-  venueTextSelected: { fontSize: 13, color: '#fff' },
-  map: { height: 180, borderRadius: 12, marginTop: 8 },
+  venueChipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  venueText: { fontSize: 13, color: colors.text },
+  venueTextSelected: { fontSize: 13, color: colors.primaryText },
+  mapWrap: { borderRadius: radius.md, overflow: 'hidden' },
+  map: { height: 160 },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
+    borderColor: colors.border,
+    borderRadius: radius.md,
     padding: 14,
-    marginTop: 10,
+    marginTop: spacing.sm,
+    backgroundColor: colors.surface,
+    color: colors.text,
   },
-  stepperRow: { marginTop: 10 },
-  stepperControls: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  timeInput: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  timeText: { fontSize: 15, color: colors.text },
+  stepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+  },
+  stepperLabel: { color: colors.text, fontSize: 15 },
+  stepperControls: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   stepperButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#eee',
+    width: 34,
+    height: 34,
+    borderRadius: radius.pill,
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepperButtonText: { fontSize: 20, fontWeight: '700' },
-  stepperValue: { fontSize: 16, fontWeight: '700', minWidth: 40, textAlign: 'center' },
+  stepperValue: { fontSize: 16, fontWeight: '700', minWidth: 32, textAlign: 'center', color: colors.text },
   submit: {
-    backgroundColor: '#1b1b1b',
-    borderRadius: 10,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
     padding: 16,
     alignItems: 'center',
-    marginTop: 28,
+    marginTop: spacing.sm,
   },
-  submitText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  submitText: { color: colors.primaryText, fontWeight: '700', fontSize: 16 },
 });

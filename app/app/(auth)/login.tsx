@@ -7,10 +7,15 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
 } from 'react-native';
 import { Link } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../../src/lib/firebase';
+import { colors, radius, spacing, pressedStyle } from '../../src/theme';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -33,64 +38,102 @@ export default function Login() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Pickup GT</Text>
-      <Text style={styles.subtitle}>Find a game near you</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.badge}>
+          <Ionicons name="basketball" size={30} color={colors.primaryText} />
+        </View>
+        <Text style={styles.title}>Pickup GT</Text>
+        <Text style={styles.subtitle}>Find a game near you</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+        <View style={styles.form}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor={colors.textFaint}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor={colors.textFaint}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
 
-      <Pressable style={styles.button} onPress={handleLogin} disabled={loading}>
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Log in</Text>
-        )}
-      </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.button, pressedStyle(pressed)]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.primaryText} />
+            ) : (
+              <Text style={styles.buttonText}>Log in</Text>
+            )}
+          </Pressable>
+        </View>
 
-      <Link href="/(auth)/signup" style={styles.link}>
-        Need an account? Sign up
-      </Link>
-    </View>
+        <Link href="/(auth)/signup" style={styles.link}>
+          Need an account? Sign up
+        </Link>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, gap: 12 },
-  title: { fontSize: 32, fontWeight: '800', textAlign: 'center' },
+  container: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: spacing.xl,
+    backgroundColor: colors.bg,
+  },
+  badge: {
+    alignSelf: 'center',
+    width: 64,
+    height: 64,
+    borderRadius: radius.xl,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  title: { fontSize: 32, fontWeight: '800', textAlign: 'center', color: colors.text },
   subtitle: {
     fontSize: 15,
-    color: '#666',
+    color: colors.textMuted,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.xl,
   },
+  form: { gap: spacing.md },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
+    borderColor: colors.border,
+    borderRadius: radius.md,
     padding: 14,
     fontSize: 16,
+    backgroundColor: colors.surface,
+    color: colors.text,
   },
   button: {
-    backgroundColor: '#1b1b1b',
-    borderRadius: 10,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
     padding: 14,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: spacing.xs,
   },
-  buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  link: { textAlign: 'center', marginTop: 16, color: '#2563eb' },
+  buttonText: { color: colors.primaryText, fontWeight: '700', fontSize: 16 },
+  link: { textAlign: 'center', marginTop: spacing.lg, color: colors.accent },
 });

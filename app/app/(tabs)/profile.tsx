@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { signOut } from 'firebase/auth';
+import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../../src/lib/firebase';
 import { useAuth } from '../../src/context/AuthContext';
 import { useProfileStats } from '../../src/lib/useProfileStats';
+import { colors, radius, spacing, pressedStyle } from '../../src/theme';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -24,13 +26,18 @@ export default function Profile() {
           <Text style={styles.statValue}>{stats.hosted}</Text>
           <Text style={styles.statLabel}>Hosted</Text>
         </View>
+        <View style={styles.statDivider} />
         <View style={styles.statBox}>
           <Text style={styles.statValue}>{stats.joined}</Text>
           <Text style={styles.statLabel}>Joined</Text>
         </View>
       </View>
 
-      <Pressable style={styles.signOut} onPress={() => signOut(auth)}>
+      <Pressable
+        style={({ pressed }) => [styles.signOut, pressedStyle(pressed)]}
+        onPress={() => signOut(auth)}
+      >
+        <Ionicons name="log-out-outline" size={18} color={colors.danger} />
         <Text style={styles.signOutText}>Sign out</Text>
       </Pressable>
     </View>
@@ -38,30 +45,45 @@ export default function Profile() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', paddingTop: 60, gap: 6 },
+  container: { flex: 1, alignItems: 'center', paddingTop: spacing.xxl, gap: 6, backgroundColor: colors.bg },
   avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#1b1b1b',
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
-  avatarText: { color: '#fff', fontSize: 28, fontWeight: '700' },
-  name: { fontSize: 20, fontWeight: '700' },
-  email: { color: '#666' },
-  statsRow: { flexDirection: 'row', gap: 32, marginTop: 24 },
-  statBox: { alignItems: 'center' },
-  statValue: { fontSize: 22, fontWeight: '800' },
-  statLabel: { color: '#666', fontSize: 13 },
-  signOut: {
-    marginTop: 40,
+  avatarText: { color: colors.primaryText, fontSize: 28, fontWeight: '700' },
+  name: { fontSize: 20, fontWeight: '700', color: colors.text },
+  email: { color: colors.textMuted },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xl,
+    marginTop: spacing.xl,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#e11d48',
-    borderRadius: 10,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xxl,
+  },
+  statBox: { alignItems: 'center', minWidth: 64 },
+  statDivider: { width: 1, height: 32, backgroundColor: colors.border },
+  statValue: { fontSize: 22, fontWeight: '800', color: colors.text },
+  statLabel: { color: colors.textMuted, fontSize: 13 },
+  signOut: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xxl,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    borderRadius: radius.md,
     paddingVertical: 12,
     paddingHorizontal: 24,
   },
-  signOutText: { color: '#e11d48', fontWeight: '700' },
+  signOutText: { color: colors.danger, fontWeight: '700' },
 });

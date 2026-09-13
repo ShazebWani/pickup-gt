@@ -6,14 +6,17 @@ import {
   StyleSheet,
   Pressable,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { SPORTS, type Sport } from '../../src/types';
 import { SportChip } from '../../src/components/SportChip';
 import { GameCard } from '../../src/components/GameCard';
 import { useUpcomingGames } from '../../src/lib/useUpcomingGames';
 import { useLocation } from '../../src/lib/useLocation';
 import { haversineMiles } from '../../src/lib/geo';
+import { colors, radius, spacing, shadow, pressedStyle } from '../../src/theme';
 
 export default function GamesList() {
   const router = useRouter();
@@ -50,6 +53,7 @@ export default function GamesList() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
+            tintColor={colors.textMuted}
             onRefresh={() => {
               setRefreshing(true);
               setTimeout(() => setRefreshing(false), 400);
@@ -75,20 +79,31 @@ export default function GamesList() {
           />
         }
         ListEmptyComponent={
-          !loading ? (
+          loading ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>No games yet</Text>
+              <ActivityIndicator size="large" color={colors.textMuted} />
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <View style={styles.emptyIcon}>
+                <Ionicons name="basketball-outline" size={28} color={colors.textFaint} />
+              </View>
+              <Text style={styles.emptyTitle}>
+                {sportFilter ? 'No games for this sport' : 'No games yet'}
+              </Text>
               <Text style={styles.emptyBody}>
-                Be the first to start one near campus.
+                {sportFilter
+                  ? 'Try another sport or start one yourself.'
+                  : 'Be the first to start one near campus.'}
               </Text>
               <Pressable
-                style={styles.emptyButton}
+                style={({ pressed }) => [styles.emptyButton, pressedStyle(pressed)]}
                 onPress={() => router.push('/create')}
               >
                 <Text style={styles.emptyButtonText}>Create a game</Text>
               </Pressable>
             </View>
-          ) : null
+          )
         }
         renderItem={({ item }) => (
           <GameCard
@@ -99,43 +114,52 @@ export default function GamesList() {
         )}
       />
 
-      <Pressable style={styles.fab} onPress={() => router.push('/create')}>
-        <Text style={styles.fabText}>+</Text>
+      <Pressable
+        style={({ pressed }) => [styles.fab, pressedStyle(pressed)]}
+        onPress={() => router.push('/create')}
+      >
+        <Ionicons name="add" size={28} color={colors.primaryText} />
       </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f7f7' },
-  listContent: { padding: 16, paddingBottom: 100 },
-  chipRow: { marginBottom: 12 },
-  empty: { alignItems: 'center', paddingTop: 80, gap: 8 },
-  emptyTitle: { fontSize: 18, fontWeight: '700' },
-  emptyBody: { color: '#666', textAlign: 'center' },
+  container: { flex: 1, backgroundColor: colors.bg },
+  listContent: { padding: spacing.lg, paddingBottom: 100, flexGrow: 1 },
+  chipRow: { marginBottom: spacing.md },
+  empty: { alignItems: 'center', paddingTop: 72, gap: spacing.xs },
+  emptyIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
+  },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
+  emptyBody: { color: colors.textMuted, textAlign: 'center', paddingHorizontal: spacing.xl },
   emptyButton: {
-    marginTop: 12,
-    backgroundColor: '#1b1b1b',
-    borderRadius: 10,
+    marginTop: spacing.md,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
     paddingVertical: 12,
     paddingHorizontal: 20,
   },
-  emptyButtonText: { color: '#fff', fontWeight: '700' },
+  emptyButtonText: { color: colors.primaryText, fontWeight: '700' },
   fab: {
     position: 'absolute',
     right: 20,
     bottom: 24,
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: '#1b1b1b',
+    borderRadius: radius.pill,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    ...shadow.floating,
   },
-  fabText: { color: '#fff', fontSize: 28, lineHeight: 30 },
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet } from 'react-native';
 import type { Sport } from '../types';
+import { radius, spacing, pressedStyle } from '../theme';
 
 export const SPORT_COLORS: Record<Sport, string> = {
   basketball: '#e8703a',
@@ -35,10 +36,11 @@ export function SportChip({
   return (
     <Pressable
       onPress={onPress}
-      style={[
+      style={({ pressed }) => [
         styles.chip,
         { borderColor: color },
         selected && { backgroundColor: color },
+        pressedStyle(pressed),
       ]}
     >
       <Text style={[styles.label, { color: selected ? '#fff' : color }]}>
@@ -50,11 +52,11 @@ export function SportChip({
 
 const styles = StyleSheet.create({
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.pill,
     borderWidth: 1.5,
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   label: {
     fontSize: 13,

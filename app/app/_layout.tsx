@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { Slot, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Pressable, Text } from 'react-native';
+import { colors } from '../src/theme';
 
 function RootNavigation() {
   const { user, initializing } = useAuth();
@@ -22,13 +23,44 @@ function RootNavigation() {
 
   if (initializing) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
-  return <Slot />;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        headerTintColor: colors.text,
+        headerTitleStyle: { fontWeight: '700', color: colors.text },
+        headerShadowVisible: false,
+        headerStyle: { backgroundColor: colors.surface },
+        contentStyle: { backgroundColor: colors.bg },
+      }}
+    >
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen
+        name="create"
+        options={{
+          headerShown: true,
+          title: 'New game',
+          presentation: 'modal',
+          headerLeft: () => (
+            <Pressable onPress={() => router.back()} hitSlop={12}>
+              <Text style={{ color: colors.accent, fontSize: 16 }}>Cancel</Text>
+            </Pressable>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="game/[id]"
+        options={{ headerShown: true, title: '' }}
+      />
+    </Stack>
+  );
 }
 
 export default function RootLayout() {
