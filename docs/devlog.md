@@ -16,3 +16,8 @@ Fixed local dev: server/.env had FIREBASE_SERVICE_ACCOUNT set to the literal she
 Commit: [`0319cef`](https://github.com/ShazebWani/pickup-gt/commit/0319cef)
 
 Added course assignment submission docs (SUBMISSION, REFERENCES, DEBUGGING, GIT_NARRATIVE, PARTNER_SETUP) and linked them from README
+
+### 2026-09-13 18:29 EDT
+Commit: [`8b8330b`](https://github.com/ShazebWani/pickup-gt/commit/8b8330b)
+
+Forced light mode (#14): changed userInterfaceStyle from 'automatic' to 'light' in app/app.config.js, and added <StatusBar style="dark" /> from expo-status-bar at the top of RootLayout in app/app/_layout.tsx. I put it outside RootNavigation so it also covers the loading spinner shown while auth initializes. Heads up: userInterfaceStyle is native config, so a running Expo Go session won't pick it up after a fast refresh. You have to fully restart the app (and on a dev build, rebuild it) before the change shows up.
