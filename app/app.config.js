@@ -6,7 +6,7 @@ module.exports = {
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'pickupgt',
-    userInterfaceStyle: 'automatic',
+    userInterfaceStyle: 'light',
     ios: {
       icon: './assets/expo.icon',
       supportsTablet: false,
