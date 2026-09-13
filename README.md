@@ -1,10 +1,23 @@
 # Pickup GT
 
-A mobile app for organizing pickup sports around Georgia Tech campus. Post that you're playing basketball, soccer, tennis, or whatever at a specific spot and time, and other students nearby can see it on a map or in a list and join. Rosters update live, and each game shows the weather forecast for its start time so people know if it's about to rain.
+Pickup GT is a mobile app (React Native + Expo, running on physical iOS/Android phones via Expo Go) for organizing pickup sports around Georgia Tech campus: post that you're playing basketball, soccer, tennis, or whatever at a specific spot and time, and other students nearby see it live on a map and in a list and can join — rosters update in real time across every device, and each game shows the weather forecast for its start time so people know if it's about to rain. It exists because court/field coordination at GT currently happens in scattered group chats with no shared, live view of what's actually happening nearby right now.
 
-Courts and fields near campus sit empty because coordination happens in scattered group chats — Pickup GT gives everyone a shared, live view of what's happening right now nearby.
+**Live backend:** [SHAZEB: fill in the deployed Render URL — not yet deployed, see `docs/SUBMISSION.md` "Known gaps" and open issue [#5](https://github.com/ShazebWani/pickup-gt/issues/5)]
 
 **Status:** Phase 1 (MVP) — auth, game creation, live rosters, map, weather, distance sorting. See `Pickup-GT-PRD.md` for the full spec and `docs/devlog.md` for build history.
+
+## Course assignment docs
+
+| Doc | What's in it |
+|---|---|
+| [`docs/SUBMISSION.md`](docs/SUBMISSION.md) | Project description, requirement-by-requirement mapping, exceptional features, screenshot checklist |
+| [`docs/REFERENCES.md`](docs/REFERENCES.md) | Annotated reference list, including the mandatory AI-assistance disclosure |
+| [`docs/DEBUGGING.md`](docs/DEBUGGING.md) | What went wrong and how it got resolved (or didn't) |
+| [`docs/GIT_NARRATIVE.md`](docs/GIT_NARRATIVE.md) | Commit history summary and the partner-coordination narrative |
+| [`docs/PARTNER_SETUP.md`](docs/PARTNER_SETUP.md) | Setup guide for a classmate checking out this repo, plus their assigned task |
+| [`docs/setup.md`](docs/setup.md) | Full environment setup (Firebase project, env vars, running on a phone) |
+| [`docs/api.md`](docs/api.md) | Every API endpoint with `curl` examples |
+| [`docs/devlog.md`](docs/devlog.md) | Running engineering log |
 
 ## Tech stack
 
