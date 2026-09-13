@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Client reads its own profile; writes it once on signup. All other
+    // writes (mutating game state) go through the server's Admin SDK,
+    // which bypasses these rules entirely.
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update, delete: if false;
+    }
+
+    // Games list/detail are read live via onSnapshot from any signed-in
+    // user. Creation, join/leave, and cancel all go through the API.
+    match /games/{gameId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Client logs its own view/open events directly; everything else is
+    // written server-side.
+    match /events/{eventId} {
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.uid;
+      allow read, update, delete: if false;
+    }
+  }
+}
