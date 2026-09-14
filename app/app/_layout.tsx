@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { View, ActivityIndicator, Pressable, Text } from 'react-native';
 import { colors } from '../src/theme';
@@ -66,6 +67,7 @@ function RootNavigation() {
 export default function RootLayout() {
   return (
     <AuthProvider>
+      <StatusBar style="dark" />
       <RootNavigation />
     </AuthProvider>
   );
