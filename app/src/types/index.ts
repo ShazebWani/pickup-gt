@@ -22,6 +22,14 @@ export const SPORTS: Sport[] = [
   'other',
 ];
 
+// Sprint 3 newcomer fields. Games created before Sprint 3 don't have them,
+// so they're optional on Game and the UI falls back when they're missing.
+export type Pace = 'casual' | 'moderate' | 'competitive';
+
+export const PACES: Pace[] = ['casual', 'moderate', 'competitive'];
+
+export const MAX_JOIN_INSTRUCTIONS = 200;
+
 export type GameStatus = 'open' | 'full' | 'cancelled' | 'completed';
 
 export interface Player {
@@ -54,6 +62,9 @@ export interface Game {
   status: GameStatus;
   weather: Weather | null;
   createdAt: Timestamp;
+  pace?: Pace | null;
+  newcomersWelcome?: boolean;
+  joinInstructions?: string;
 }
 
 export interface UserDoc {
@@ -82,4 +93,7 @@ export interface CreateGamePayload {
   startTime: string; // ISO string
   durationMinutes: number;
   capacity: number;
+  pace: Pace;
+  newcomersWelcome: boolean;
+  joinInstructions: string;
 }

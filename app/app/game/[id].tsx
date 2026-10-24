@@ -18,6 +18,7 @@ import { db } from '../../src/lib/firebase';
 import { useAuth } from '../../src/context/AuthContext';
 import type { Game } from '../../src/types';
 import { SPORT_COLORS, SPORT_LABELS } from '../../src/components/SportChip';
+import { PACE_LABELS, PACE_DESCRIPTIONS } from '../../src/components/GameInfo';
 import { formatTemp, formatPrecip, isRainy } from '../../src/lib/weather';
 import { api, ApiError } from '../../src/lib/api';
 import { logEvent } from '../../src/lib/events';
@@ -178,6 +179,35 @@ export default function GameDetail() {
           <View style={styles.metaRow}>
             <Ionicons name="person-outline" size={15} color={colors.textMuted} />
             <Text style={styles.meta}>Hosted by {game.hostName}</Text>
+          </View>
+
+          <View style={styles.joinCard}>
+            <Text style={styles.joinCardTitle}>Before you go</Text>
+            {game.pace && (
+              <View style={styles.joinCardRow}>
+                <Ionicons name="speedometer-outline" size={16} color={colors.text} />
+                <Text style={styles.joinCardText}>
+                  <Text style={styles.joinCardStrong}>{PACE_LABELS[game.pace]} pace. </Text>
+                  {PACE_DESCRIPTIONS[game.pace]}
+                </Text>
+              </View>
+            )}
+            {game.newcomersWelcome && (
+              <View style={styles.joinCardRow}>
+                <Ionicons name="hand-left-outline" size={16} color={colors.success} />
+                <Text style={styles.joinCardText}>
+                  <Text style={[styles.joinCardStrong, { color: colors.success }]}>Newcomers welcome. </Text>
+                  You don't need to know anyone to join.
+                </Text>
+              </View>
+            )}
+            <View style={styles.joinCardRow}>
+              <Ionicons name="information-circle-outline" size={16} color={colors.text} />
+              <Text style={styles.joinCardText}>
+                {game.joinInstructions?.trim() ||
+                  `Head to ${game.spotName} and ask for ${game.hostName}.`}
+              </Text>
+            </View>
           </View>
 
           <View style={styles.weatherRow}>
@@ -342,6 +372,19 @@ const styles = StyleSheet.create({
   spot: { fontSize: 26, fontWeight: '800', color: colors.text },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   meta: { color: colors.textMuted, fontSize: 14 },
+  joinCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  joinCardTitle: { fontWeight: '700', fontSize: 13, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 },
+  joinCardRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  joinCardText: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 20 },
+  joinCardStrong: { fontWeight: '700' },
   weatherRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
   weatherChip: {
     flexDirection: 'row',

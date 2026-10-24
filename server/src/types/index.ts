@@ -9,6 +9,8 @@ export type Sport =
   | 'spikeball'
   | 'other';
 
+export type Pace = 'casual' | 'moderate' | 'competitive';
+
 export type GameStatus = 'open' | 'full' | 'cancelled' | 'completed';
 
 export interface Player {
@@ -41,6 +43,10 @@ export interface Game {
   status: GameStatus;
   weather: Weather | null;
   createdAt: FirebaseFirestore.Timestamp;
+  // Missing on games created before Sprint 3.
+  pace?: Pace | null;
+  newcomersWelcome?: boolean;
+  joinInstructions?: string;
 }
 
 export interface UserDoc {
@@ -77,4 +83,8 @@ export interface CreateGameBody {
   startTime: string; // ISO string over the wire
   durationMinutes: number;
   capacity: number;
+  // Optional so older app builds that don't send them can still create games.
+  pace?: Pace;
+  newcomersWelcome?: boolean;
+  joinInstructions?: string;
 }

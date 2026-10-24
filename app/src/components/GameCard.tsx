@@ -3,6 +3,7 @@ import { Pressable, View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Game } from '../types';
 import { SPORT_COLORS, SPORT_LABELS } from './SportChip';
+import { GameTags } from './GameInfo';
 import { formatRelativeTime } from '../lib/time';
 import { formatDistance } from '../lib/geo';
 import { isRainy } from '../lib/weather';
@@ -36,6 +37,7 @@ export function GameCard({
       <Text style={styles.spot} numberOfLines={1}>
         {game.spotName}
       </Text>
+      <GameTags game={game} />
       <View style={styles.row}>
         <Text style={[styles.meta, isFull && styles.metaFull]}>
           {game.players.length}/{game.capacity} joined
