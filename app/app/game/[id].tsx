@@ -46,6 +46,13 @@ export default function GameDetail() {
     if (id) logEvent('game_viewed', id);
   }, [id]);
 
+  // Re-render periodically so "I'm here" appears once check-in opens.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     navigation.setOptions({ title: game?.spotName ?? '' });
   }, [game?.spotName, navigation]);
@@ -79,6 +86,9 @@ export default function GameDetail() {
     nowMs >= startDate.getTime() - 30 * 60 * 1000 &&
     nowMs <= startDate.getTime() + game.durationMinutes * 60 * 1000;
   const canCheckIn = !!me && !me.arrivedAt && !isCancelled && checkInOpen;
+  const checkInOpensAt = new Date(startDate.getTime() - 30 * 60 * 1000);
+  const checkInNotYet =
+    !!me && !me.arrivedAt && !isCancelled && nowMs < checkInOpensAt.getTime();
 
   async function handleJoin() {
     setActionLoading(true);
@@ -290,6 +300,13 @@ export default function GameDetail() {
       )}
       ListFooterComponent={
         <View style={styles.footer}>
+          {checkInNotYet && (
+            <Text style={styles.checkInNote}>
+              Check-in opens at{' '}
+              {checkInOpensAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.
+              Tap "I'm here" when you get to the court.
+            </Text>
+          )}
           {canCheckIn && (
             <Pressable
               style={({ pressed }) => [styles.checkInButton, pressedStyle(pressed)]}
@@ -459,6 +476,7 @@ const styles = StyleSheet.create({
   hereBadgeText: { fontSize: 10, fontWeight: '700', color: colors.primaryText },
   playerJoined: { color: colors.textFaint, fontSize: 12, marginLeft: 'auto' },
   footer: { marginTop: spacing.xl, paddingBottom: spacing.xl, gap: spacing.sm },
+  checkInNote: { color: colors.textMuted, fontSize: 13, textAlign: 'center' },
   checkInButton: {
     backgroundColor: colors.primary,
     borderRadius: radius.md,

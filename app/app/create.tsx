@@ -93,7 +93,10 @@ export default function CreateGame() {
         newcomersWelcome,
         joinInstructions: joinInstructions.trim(),
       });
-      router.replace(`/game/${id}`);
+      // Close the create modal first, then open the game as a normal screen,
+      // so the game page's back arrow returns to the list.
+      router.dismiss();
+      router.push(`/game/${id}`);
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : (err as Error).message;
