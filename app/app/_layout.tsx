@@ -1,14 +1,40 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
-import { View, ActivityIndicator, Pressable, Text } from 'react-native';
+import { View, ActivityIndicator, Pressable, Text, AppState } from 'react-native';
 import { colors } from '../src/theme';
+import { logEvent } from '../src/lib/events';
+
+// Foregrounding the app again within this window counts as the same open.
+const OPEN_GAP_MS = 5 * 60 * 1000;
+
+function useAppOpenTracking(uid: string | undefined) {
+  const lastOpen = useRef(0);
+
+  useEffect(() => {
+    if (!uid) return;
+
+    const logOpen = () => {
+      const now = Date.now();
+      if (now - lastOpen.current < OPEN_GAP_MS) return;
+      lastOpen.current = now;
+      logEvent('app_opened');
+    };
+
+    logOpen();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') logOpen();
+    });
+    return () => sub.remove();
+  }, [uid]);
+}
 
 function RootNavigation() {
   const { user, initializing } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  useAppOpenTracking(user?.uid);
 
   useEffect(() => {
     if (initializing) return;

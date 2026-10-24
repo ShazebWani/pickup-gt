@@ -228,8 +228,71 @@ router.delete('/:id', requireAuth, async (req: AuthedRequest, res: Response) => 
   }
 
   await gameRef.update({ status: 'cancelled' });
-  await logEvent(uid, 'game_left', req.params.id, { reason: 'host_cancelled' });
+  await logEvent(uid, 'game_cancelled', req.params.id, {
+    playerCount: (game.players ?? []).length,
+  });
   res.json({ ok: true });
+});
+
+// Players tap "I'm here" at the court. This is how Sprint 3 measures
+// RSVP to arrival without asking the host to confirm attendance afterward.
+const CHECKIN_OPENS_MINUTES_BEFORE = 30;
+
+router.post('/:id/checkin', requireAuth, async (req: AuthedRequest, res: Response) => {
+  const uid = req.uid!;
+  const gameRef = db.collection('games').doc(req.params.id);
+  let minutesFromStart = 0;
+
+  try {
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(gameRef);
+      if (!snap.exists) {
+        throw { status: 404, message: 'Game not found.' };
+      }
+      const game = snap.data()!;
+      if (game.status === 'cancelled') {
+        throw { status: 409, message: 'This game was cancelled.' };
+      }
+
+      const start: Date = game.startTime.toDate();
+      const now = new Date();
+      const opens = new Date(start.getTime() - CHECKIN_OPENS_MINUTES_BEFORE * 60 * 1000);
+      const closes = new Date(start.getTime() + game.durationMinutes * 60 * 1000);
+      if (now < opens) {
+        throw {
+          status: 409,
+          message: `Check-in opens ${CHECKIN_OPENS_MINUTES_BEFORE} minutes before the game.`,
+        };
+      }
+      if (now > closes) {
+        throw { status: 409, message: 'This game has already ended.' };
+      }
+
+      const players: Array<{ uid: string; arrivedAt?: unknown }> = game.players ?? [];
+      const index = players.findIndex((p) => p.uid === uid);
+      if (index === -1) {
+        throw { status: 409, message: 'Join the game before checking in.' };
+      }
+      if (players[index].arrivedAt) {
+        throw { status: 409, message: 'You already checked in.' };
+      }
+
+      minutesFromStart = Math.round((now.getTime() - start.getTime()) / 60000);
+      const newPlayers = players.map((p, i) =>
+        i === index ? { ...p, arrivedAt: Timestamp.now() } : p
+      );
+      tx.update(gameRef, { players: newPlayers });
+    });
+
+    await logEvent(uid, 'checked_in', req.params.id, { minutesFromStart });
+    res.json({ ok: true });
+  } catch (err: any) {
+    if (err?.status) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    res.status(500).json({ error: 'Failed to check in.' });
+  }
 });
 
 router.post(

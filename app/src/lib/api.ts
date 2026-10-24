@@ -94,6 +94,9 @@ export const api = {
   leaveGame: (id: string) =>
     request<{ ok: true }>(`/api/games/${id}/leave`, { method: 'POST' }),
 
+  checkIn: (id: string) =>
+    request<{ ok: true }>(`/api/games/${id}/checkin`, { method: 'POST' }),
+
   cancelGame: (id: string) =>
     request<{ ok: true }>(`/api/games/${id}`, { method: 'DELETE' }),
 

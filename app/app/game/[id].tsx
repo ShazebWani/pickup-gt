@@ -72,6 +72,12 @@ export default function GameDetail() {
   const isCancelled = game.status === 'cancelled';
   const startDate = game.startTime.toDate();
   const rainy = isRainy(game.weather);
+  const me = game.players.find((p) => p.uid === user?.uid);
+  const nowMs = Date.now();
+  const checkInOpen =
+    nowMs >= startDate.getTime() - 30 * 60 * 1000 &&
+    nowMs <= startDate.getTime() + game.durationMinutes * 60 * 1000;
+  const canCheckIn = !!me && !me.arrivedAt && !isCancelled && checkInOpen;
 
   async function handleJoin() {
     setActionLoading(true);
@@ -81,6 +87,19 @@ export default function GameDetail() {
       const message =
         err instanceof ApiError ? err.message : (err as Error).message;
       Alert.alert('Could not join', message);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleCheckIn() {
+    setActionLoading(true);
+    try {
+      await api.checkIn(game!.id);
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : (err as Error).message;
+      Alert.alert('Could not check in', message);
     } finally {
       setActionLoading(false);
     }
@@ -226,6 +245,11 @@ export default function GameDetail() {
               <Text style={styles.hostBadgeText}>Host</Text>
             </View>
           )}
+          {item.arrivedAt ? (
+            <View style={styles.hereBadge}>
+              <Text style={styles.hereBadgeText}>Here</Text>
+            </View>
+          ) : null}
           <Text style={styles.playerJoined}>
             {item.joinedAt.toDate().toLocaleTimeString([], {
               hour: 'numeric',
@@ -236,6 +260,19 @@ export default function GameDetail() {
       )}
       ListFooterComponent={
         <View style={styles.footer}>
+          {canCheckIn && (
+            <Pressable
+              style={({ pressed }) => [styles.checkInButton, pressedStyle(pressed)]}
+              onPress={handleCheckIn}
+              disabled={actionLoading}
+            >
+              {actionLoading ? (
+                <ActivityIndicator color={colors.primaryText} />
+              ) : (
+                <Text style={styles.joinButtonText}>I'm here</Text>
+              )}
+            </Pressable>
+          )}
           {isCancelled ? null : isHost ? (
             <Pressable
               style={({ pressed }) => [styles.cancelButton, pressedStyle(pressed)]}
@@ -370,8 +407,21 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   hostBadgeText: { fontSize: 10, fontWeight: '700', color: colors.textMuted },
+  hereBadge: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  hereBadgeText: { fontSize: 10, fontWeight: '700', color: colors.primaryText },
   playerJoined: { color: colors.textFaint, fontSize: 12, marginLeft: 'auto' },
-  footer: { marginTop: spacing.xl, paddingBottom: spacing.xl },
+  footer: { marginTop: spacing.xl, paddingBottom: spacing.xl, gap: spacing.sm },
+  checkInButton: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    padding: 16,
+    alignItems: 'center',
+  },
   joinButton: {
     backgroundColor: colors.primary,
     borderRadius: radius.md,

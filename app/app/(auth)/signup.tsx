@@ -17,6 +17,7 @@ import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { auth, db } from '../../src/lib/firebase';
 import { colors, radius, spacing, pressedStyle } from '../../src/theme';
+import { logEvent } from '../../src/lib/events';
 
 export default function Signup() {
   const router = useRouter();
@@ -49,6 +50,7 @@ export default function Signup() {
         email: email.trim(),
         createdAt: serverTimestamp(),
       });
+      logEvent('signed_up');
     } catch (err) {
       Alert.alert('Sign up failed', (err as Error).message);
     } finally {

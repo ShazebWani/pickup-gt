@@ -15,6 +15,7 @@ export interface Player {
   uid: string;
   displayName: string;
   joinedAt: FirebaseFirestore.Timestamp;
+  arrivedAt?: FirebaseFirestore.Timestamp | null;
 }
 
 export interface Weather {
@@ -53,8 +54,11 @@ export type EventType =
   | 'game_created'
   | 'game_joined'
   | 'game_left'
+  | 'game_cancelled'
+  | 'checked_in'
   | 'game_viewed'
-  | 'app_opened';
+  | 'app_opened'
+  | 'signed_up';
 
 export interface EventDoc {
   uid: string;
