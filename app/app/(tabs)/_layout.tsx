@@ -25,7 +25,7 @@ export default function TabsLayout() {
             <Ionicons
               name={focused ? 'basketball' : 'basketball-outline'}
               size={size}
-              color={color}
+              color={color as string}
             />
           ),
         }}
@@ -36,7 +36,7 @@ export default function TabsLayout() {
           title: 'Map',
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'map' : 'map-outline'} size={size} color={color} />
+            <Ionicons name={focused ? 'map' : 'map-outline'} size={size} color={color as string} />
           ),
         }}
       />
@@ -45,7 +45,7 @@ export default function TabsLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color as string} />
           ),
         }}
       />
