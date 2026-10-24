@@ -3,7 +3,7 @@ import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { db } from '../services/firestore';
 import { getWeatherAt } from '../services/weather';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
-import type { CreateGameBody, EventType, Sport } from '../types';
+import type { CreateGameBody, EventType, Pace, Sport } from '../types';
 
 const router = Router();
 
@@ -16,6 +16,9 @@ const SPORTS: Sport[] = [
   'spikeball',
   'other',
 ];
+
+const PACES: Pace[] = ['casual', 'moderate', 'competitive'];
+const MAX_JOIN_INSTRUCTIONS = 200;
 
 const BOUNDS = { minLat: 33.6, maxLat: 33.9, minLng: -84.6, maxLng: -84.2 };
 const MAX_START_DAYS_OUT = 14;
@@ -63,6 +66,20 @@ function validateCreateGameBody(body: Partial<CreateGameBody>): string | null {
   if (start > maxDate) {
     return `startTime must be within the next ${MAX_START_DAYS_OUT} days`;
   }
+  // Newcomer fields are optional so older app builds keep working.
+  if (body.pace !== undefined && !PACES.includes(body.pace)) {
+    return `pace must be one of ${PACES.join(', ')}`;
+  }
+  if (body.newcomersWelcome !== undefined && typeof body.newcomersWelcome !== 'boolean') {
+    return 'newcomersWelcome must be true or false';
+  }
+  if (
+    body.joinInstructions !== undefined &&
+    (typeof body.joinInstructions !== 'string' ||
+      body.joinInstructions.trim().length > MAX_JOIN_INSTRUCTIONS)
+  ) {
+    return `joinInstructions must be at most ${MAX_JOIN_INSTRUCTIONS} characters`;
+  }
   return null;
 }
 
@@ -100,6 +117,10 @@ router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
   const startTime = new Date(body.startTime!);
   const weather = await getWeatherAt(body.lat!, body.lng!, startTime);
 
+  const pace = body.pace ?? null;
+  const newcomersWelcome = body.newcomersWelcome ?? false;
+  const joinInstructions = body.joinInstructions?.trim() ?? '';
+
   const gameRef = db.collection('games').doc();
   await gameRef.set({
     id: gameRef.id,
@@ -119,9 +140,16 @@ router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
       ? { ...weather, fetchedAt: Timestamp.now() }
       : null,
     createdAt: FieldValue.serverTimestamp(),
+    pace,
+    newcomersWelcome,
+    joinInstructions,
   });
 
-  await logEvent(uid, 'game_created', gameRef.id);
+  await logEvent(uid, 'game_created', gameRef.id, {
+    pace: pace ?? 'none',
+    newcomersWelcome: newcomersWelcome ? 1 : 0,
+    hasJoinInstructions: joinInstructions ? 1 : 0,
+  });
 
   res.status(201).json({ id: gameRef.id });
 });

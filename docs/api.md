@@ -54,7 +54,10 @@ curl -s -X POST "$BASE_URL/api/games" \
     "lng": -84.4035,
     "startTime": "2026-09-15T18:00:00.000Z",
     "durationMinutes": 60,
-    "capacity": 10
+    "capacity": 10,
+    "pace": "casual",
+    "newcomersWelcome": true,
+    "joinInstructions": "Court 2, far side. Ask for Shubh."
   }'
 ```
 
@@ -69,6 +72,9 @@ Validation (`400`):
 - `startTime` must be in the future and within 14 days
 - `spotName` must be 1-60 characters
 - `lat` must be 33.6-33.9, `lng` must be -84.6 to -84.2
+- `pace` (optional) must be `casual`, `moderate`, or `competitive`; saved as `null` if omitted
+- `newcomersWelcome` (optional) must be a boolean; defaults to `false`
+- `joinInstructions` (optional) must be at most 200 characters after trimming; defaults to `""`
 
 ---
 

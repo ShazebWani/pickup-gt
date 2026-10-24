@@ -16,3 +16,8 @@ Fixed local dev: server/.env had FIREBASE_SERVICE_ACCOUNT set to the literal she
 Commit: [`0319cef`](https://github.com/ShazebWani/pickup-gt/commit/0319cef)
 
 Added course assignment submission docs (SUBMISSION, REFERENCES, DEBUGGING, GIT_NARRATIVE, PARTNER_SETUP) and linked them from README
+
+### 2026-10-24 17:41 EDT
+Commit: [`d04a116`](https://github.com/ShazebWani/pickup-gt/commit/d04a116)
+
+Added game pace, newcomers welcome flag, and where/how to join instructions to game create, card, and detail; saved by the API and included in the Sprint 3 export

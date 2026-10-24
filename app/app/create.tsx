@@ -10,13 +10,15 @@ import {
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
+  Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import { SPORTS, type Sport } from '../src/types';
+import { SPORTS, PACES, MAX_JOIN_INSTRUCTIONS, type Pace, type Sport } from '../src/types';
 import { SportChip } from '../src/components/SportChip';
+import { PACE_LABELS, PACE_DESCRIPTIONS } from '../src/components/GameInfo';
 import { VENUES, CAMPUS_REGION } from '../src/lib/venues';
 import { api, ApiError } from '../src/lib/api';
 import { colors, radius, spacing, pressedStyle } from '../src/theme';
@@ -41,6 +43,9 @@ export default function CreateGame() {
   const [showPicker, setShowPicker] = useState(false);
   const [duration, setDuration] = useState(60);
   const [capacity, setCapacity] = useState(10);
+  const [pace, setPace] = useState<Pace | null>(null);
+  const [newcomersWelcome, setNewcomersWelcome] = useState(true);
+  const [joinInstructions, setJoinInstructions] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const selectedVenue = VENUES.find((v) => v.id === venueId) ?? null;
@@ -68,6 +73,10 @@ export default function CreateGame() {
       Alert.alert('Missing location', 'Pick a venue or drop a pin on the map.');
       return;
     }
+    if (!pace) {
+      Alert.alert('Missing pace', 'Pick how intense the game will be.');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -80,6 +89,9 @@ export default function CreateGame() {
         startTime: startTime.toISOString(),
         durationMinutes: duration,
         capacity,
+        pace,
+        newcomersWelcome,
+        joinInstructions: joinInstructions.trim(),
       });
       router.replace(`/game/${id}`);
     } catch (err) {
@@ -195,6 +207,50 @@ export default function CreateGame() {
           />
         </Section>
 
+        <Section label="Who it's for">
+          <Text style={styles.fieldLabel}>Game pace</Text>
+          <View style={styles.wrapRow}>
+            {PACES.map((p) => (
+              <Pressable
+                key={p}
+                onPress={() => setPace(p)}
+                style={({ pressed }) => [
+                  styles.venueChip,
+                  pace === p && styles.venueChipSelected,
+                  pressedStyle(pressed),
+                ]}
+              >
+                <Text style={pace === p ? styles.venueTextSelected : styles.venueText}>
+                  {PACE_LABELS[p]}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          {pace && <Text style={styles.hint}>{PACE_DESCRIPTIONS[pace]}</Text>}
+
+          <View style={styles.switchRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.stepperLabel}>Newcomers welcome</Text>
+              <Text style={styles.switchHint}>People who don't know anyone here can just show up</Text>
+            </View>
+            <Switch value={newcomersWelcome} onValueChange={setNewcomersWelcome} />
+          </View>
+
+          <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>Where and how to join</Text>
+          <TextInput
+            style={[styles.input, styles.multiline]}
+            placeholder="e.g. Court 2, far side. Ask for Shubh, next team is called when you get there."
+            placeholderTextColor={colors.textFaint}
+            value={joinInstructions}
+            onChangeText={setJoinInstructions}
+            maxLength={MAX_JOIN_INSTRUCTIONS}
+            multiline
+          />
+          <Text style={styles.counter}>
+            {joinInstructions.length}/{MAX_JOIN_INSTRUCTIONS}
+          </Text>
+        </Section>
+
         <Pressable
           style={({ pressed }) => [styles.submit, pressedStyle(pressed)]}
           onPress={handleSubmit}
@@ -298,6 +354,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     color: colors.text,
   },
+  multiline: { minHeight: 80, textAlignVertical: 'top' },
+  counter: { color: colors.textFaint, fontSize: 12, textAlign: 'right', marginTop: spacing.xs },
+  fieldLabel: { color: colors.text, fontSize: 15, marginBottom: spacing.sm },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginTop: spacing.md,
+  },
+  switchHint: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
   timeInput: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   timeText: { fontSize: 15, color: colors.text },
   stepperRow: {
