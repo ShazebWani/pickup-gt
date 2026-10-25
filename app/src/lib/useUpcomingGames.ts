@@ -9,16 +9,27 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Game } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { visibleGames } from './visibleGames';
 
-/** Live query of open/full games starting from now onward, soonest first. */
+/** Upcoming games plus the caller's ongoing games, soonest first. */
 export function useUpcomingGames() {
+  const { user } = useAuth();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(Date.now);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const q = query(
       collection(db, 'games'),
-      where('startTime', '>=', Timestamp.now()),
+      // 300 minutes is the API's maximum game duration. The existing query
+      // index still applies; filtering participation happens locally.
+      where('startTime', '>=', Timestamp.fromMillis(Date.now() - 300 * 60_000)),
       where('status', 'in', ['open', 'full']),
       orderBy('startTime', 'asc')
     );
@@ -37,5 +48,5 @@ export function useUpcomingGames() {
     return unsubscribe;
   }, []);
 
-  return { games, loading };
+  return { games: visibleGames(games, user?.uid, now), loading };
 }

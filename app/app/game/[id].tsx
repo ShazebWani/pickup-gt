@@ -23,6 +23,8 @@ import { formatTemp, formatPrecip, isRainy } from '../../src/lib/weather';
 import { api, ApiError } from '../../src/lib/api';
 import { logEvent } from '../../src/lib/events';
 import { colors, radius, spacing, pressedStyle } from '../../src/theme';
+import { CourtStatusCard } from '../../src/components/CourtStatusCard';
+import { COURT_VENUE_ID } from '../../src/lib/courts';
 
 export default function GameDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -82,6 +84,7 @@ export default function GameDetail() {
   const rainy = isRainy(game.weather);
   const me = game.players.find((p) => p.uid === user?.uid);
   const nowMs = Date.now();
+  const hasStarted = nowMs >= startDate.getTime();
   const checkInOpen =
     nowMs >= startDate.getTime() - 30 * 60 * 1000 &&
     nowMs <= startDate.getTime() + game.durationMinutes * 60 * 1000;
@@ -162,6 +165,7 @@ export default function GameDetail() {
 
   return (
     <FlatList
+      keyboardShouldPersistTaps="handled"
       style={styles.container}
       contentContainerStyle={styles.listContent}
       data={game.players}
@@ -220,7 +224,9 @@ export default function GameDetail() {
             </View>
           </View>
 
-          <View style={styles.weatherRow}>
+          {game.venueId === COURT_VENUE_ID && <CourtStatusCard />}
+
+          {game.venueId !== COURT_VENUE_ID && <View style={styles.weatherRow}>
             <View style={styles.weatherChip}>
               <Ionicons name="thermometer-outline" size={16} color={colors.text} />
               <Text style={styles.weatherText}>{formatTemp(game.weather)}</Text>
@@ -235,7 +241,7 @@ export default function GameDetail() {
                 {formatPrecip(game.weather) || 'No rain data'}
               </Text>
             </View>
-          </View>
+          </View>}
 
           <View style={styles.mapWrap}>
             <MapView
@@ -348,17 +354,17 @@ export default function GameDetail() {
             <Pressable
               style={({ pressed }) => [
                 styles.joinButton,
-                isFull && styles.joinButtonDisabled,
+                (isFull || hasStarted) && styles.joinButtonDisabled,
                 pressedStyle(pressed),
               ]}
               onPress={handleJoin}
-              disabled={actionLoading || isFull}
+              disabled={actionLoading || isFull || hasStarted}
             >
               {actionLoading ? (
                 <ActivityIndicator color={colors.primaryText} />
               ) : (
                 <Text style={styles.joinButtonText}>
-                  {isFull ? 'Game full' : 'Join game'}
+                  {hasStarted ? 'Game started' : isFull ? 'Game full' : 'Join game'}
                 </Text>
               )}
             </Pressable>
