@@ -17,12 +17,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Client logs its own view/open events directly; everything else is
+    // Client logs its own view/open/signup events directly; everything else is
     // written server-side.
     match /events/{eventId} {
       allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.uid;
+        && request.auth.uid == request.resource.data.uid
+        && request.resource.data.type in ['game_viewed', 'app_opened', 'signed_up'];
       allow read, update, delete: if false;
     }
+
+    // courtReports and courtStatuses intentionally have no client access.
+    // The authenticated API writes both and returns statuses without uid.
   }
 }

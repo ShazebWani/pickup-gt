@@ -6,7 +6,12 @@ Base URL: set `BASE_URL` to either your local server (`http://localhost:3000`) o
 export BASE_URL="https://pickup-gt-api.onrender.com"
 ```
 
-Every example below has been run against this exact deployed URL, including a full authenticated create → cancel → reject cycle (see `docs/DEBUGGING.md` and `docs/SUBMISSION.md`) — not just against localhost.
+The original game lifecycle examples were verified against that deployed URL
+(see `docs/DEBUGGING.md` and `docs/SUBMISSION.md`). Sprint 3 additions require
+the updated backend; local validation does not establish live deployment.
+
+For the new authenticated court-status read/report endpoints, storage, and
+local testing instructions, see [Court reports](COURT_REPORTS.md).
 
 All write endpoints require `Authorization: Bearer <Firebase ID token>`. To get a token for `curl` testing, call the Firebase Auth REST API with a test account's email/password and your Firebase Web API key:
 

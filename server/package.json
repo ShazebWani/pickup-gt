@@ -7,7 +7,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "export": "tsx src/scripts/export-sprint3.ts"
+    "export": "tsx src/scripts/export-sprint3.ts",
+    "test:courts": "tsx --test test/courts.integration.test.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -13,9 +13,13 @@ function loadServiceAccount() {
 }
 
 if (!getApps().length) {
-  initializeApp({
-    credential: cert(loadServiceAccount()),
-  });
+  if (process.env.FIRESTORE_EMULATOR_HOST && process.env.FIREBASE_AUTH_EMULATOR_HOST &&
+      process.env.GCLOUD_PROJECT?.startsWith('demo-')) {
+    // Explicit local-only test mode. Real projects still require credentials.
+    initializeApp({ projectId: process.env.GCLOUD_PROJECT });
+  } else {
+    initializeApp({ credential: cert(loadServiceAccount()) });
+  }
 }
 
 export const db = getFirestore();

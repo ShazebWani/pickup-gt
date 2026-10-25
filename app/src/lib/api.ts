@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 import { auth } from './firebase';
 import type { CreateGamePayload } from '../types';
+import { COURT_VENUE_ID, type CourtReportPayload, type CourtResponse } from './courts';
 
 const extra = Constants.expoConfig?.extra ?? {};
 
@@ -83,6 +84,9 @@ async function request<T>(
 }
 
 export const api = {
+  courtStatuses: () => request<CourtResponse>(`/api/venues/${COURT_VENUE_ID}/courts`),
+  reportCourt: (body: CourtReportPayload) =>
+    request<{ id: string; courtId: string }>(`/api/venues/${COURT_VENUE_ID}/courts/reports`, { method: 'POST', body }),
   health: () => request<{ ok: true }>('/health', { auth: false }),
 
   createGame: (body: CreateGamePayload) =>

@@ -10,6 +10,13 @@ export interface Venue {
 
 export const VENUES: Venue[] = [
   {
+    id: 'crc-main-gym',
+    name: 'CRC Main Gym (4th floor)',
+    lat: 33.7756,
+    lng: -84.4035,
+    sports: ['basketball', 'volleyball', 'other'],
+  },
+  {
     id: 'crc-outdoor-basketball',
     name: 'CRC Outdoor Basketball Courts',
     lat: 33.7756,

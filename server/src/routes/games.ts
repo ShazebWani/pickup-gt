@@ -4,6 +4,7 @@ import { db } from '../services/firestore';
 import { getWeatherAt } from '../services/weather';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import type { CreateGameBody, EventType, Pace, Sport } from '../types';
+import { COURT_VENUE_ID } from '../services/courtReports';
 
 const router = Router();
 
@@ -115,7 +116,10 @@ router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
 
   const hostName = await getDisplayName(uid);
   const startTime = new Date(body.startTime!);
-  const weather = await getWeatherAt(body.lat!, body.lng!, startTime);
+  // Indoor CRC games do not need an external outdoor weather request.
+  const weather = body.venueId === COURT_VENUE_ID
+    ? null
+    : await getWeatherAt(body.lat!, body.lng!, startTime);
 
   const pace = body.pace ?? null;
   const newcomersWelcome = body.newcomersWelcome ?? false;
