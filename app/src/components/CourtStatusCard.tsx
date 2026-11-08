@@ -2,10 +2,39 @@ import React, { useCallback, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { api } from '../lib/api';
-import type { CourtResponse } from '../lib/courts';
+import { COURT_VENUE_ID, type CourtResponse, type CourtSnapshot } from '../lib/courts';
+import { useLabelExperiment, type SessionMode } from '../lib/experiment';
 import { CourtStatusPanel } from './CourtStatusPanel';
 
+// Fixed screens for moderated sessions, so every participant sees the same
+// fresh and stale courts no matter when the session runs.
+function sessionCourts(mode: Exclude<SessionMode, 'off'>): CourtResponse {
+  const now = Date.now();
+  const court = (n: number, minutesAgo: number): CourtSnapshot => ({
+    courtId: `session-court-${n}`, courtLabel: `Court ${n}`, status: 'available',
+    observedAt: new Date(now - minutesAgo * 60_000).toISOString(),
+    submittedAt: new Date(now - minutesAgo * 60_000).toISOString(),
+    ageMs: minutesAgo * 60_000, stale: minutesAgo >= 30,
+  });
+  return { venueId: COURT_VENUE_ID, staleAfterMinutes: 30, courts: mode === 'empty' ? [] : [court(1, 37), court(2, 12)] };
+}
+
 export function CourtStatusCard() {
+  const { variant, sessionMode } = useLabelExperiment();
+  if (sessionMode !== 'off') {
+    return <SessionCourtStatusCard key={sessionMode} mode={sessionMode} variant={variant} />;
+  }
+  return <LiveCourtStatusCard variant={variant} />;
+}
+
+function SessionCourtStatusCard({ mode, variant }: { mode: Exclude<SessionMode, 'off'>; variant: 'A' | 'B' }) {
+  const [data] = useState(() => sessionCourts(mode));
+  return <CourtStatusPanel data={data} loading={false} error={null} elapsedMs={0}
+    variant={variant} context="session" onRefresh={() => {}}
+    onSubmit={async (report) => { await api.reportCourt({ ...report, context: 'session' }); }} />;
+}
+
+function LiveCourtStatusCard({ variant }: { variant: 'A' | 'B' }) {
   const [data, setData] = useState<CourtResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +88,7 @@ export function CourtStatusCard() {
   }, []));
 
   return <CourtStatusPanel data={data} loading={loading} error={error} elapsedMs={elapsedMs}
+    variant={variant} context="live"
     onRefresh={() => { void refresh.current(); }}
     onSubmit={async (report) => {
       await api.reportCourt(report);

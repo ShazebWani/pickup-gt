@@ -87,6 +87,7 @@ export const api = {
   courtStatuses: () => request<CourtResponse>(`/api/venues/${COURT_VENUE_ID}/courts`),
   reportCourt: (body: CourtReportPayload) =>
     request<{ id: string; courtId: string }>(`/api/venues/${COURT_VENUE_ID}/courts/reports`, { method: 'POST', body }),
+  myVariant: () => request<{ variant: 'A' | 'B' }>('/api/me/variant'),
   health: () => request<{ ok: true }>('/health', { auth: false }),
 
   createGame: (body: CreateGamePayload) =>

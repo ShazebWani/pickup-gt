@@ -1,18 +1,23 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, Pressable, StyleSheet } from 'react-native';
 import { signOut } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../../src/lib/firebase';
 import { useAuth } from '../../src/context/AuthContext';
 import { useProfileStats } from '../../src/lib/useProfileStats';
+import {
+  setSessionMode, setVariantOverride, useLabelExperiment,
+  type LabelVariant, type SessionMode,
+} from '../../src/lib/experiment';
 import { colors, radius, spacing, pressedStyle } from '../../src/theme';
 
 export default function Profile() {
   const { user } = useAuth();
   const { stats } = useProfileStats(user?.uid);
+  const experiment = useLabelExperiment();
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>
           {(user?.displayName ?? '?').charAt(0).toUpperCase()}
@@ -33,6 +38,34 @@ export default function Profile() {
         </View>
       </View>
 
+      {/* Sprint 4 moderated sessions: set the court card variant and show the
+          fixed session screens. Stays on this device only. */}
+      <View style={styles.testing}>
+        <Text style={styles.testingTitle}>Testing</Text>
+        <Text style={styles.testingNote}>
+          Court card: {experiment.variant}{experiment.override ? ' (set here)' : ' (assigned)'}
+        </Text>
+        <View style={styles.chipRow}>
+          {([null, 'A', 'B'] as (LabelVariant | null)[]).map((v) => {
+            const on = experiment.override === v;
+            return <Pressable key={v ?? 'auto'} accessibilityRole="radio" accessibilityState={{ checked: on }}
+              onPress={() => { void setVariantOverride(v); }} style={[styles.chip, on && styles.chipOn]}>
+              <Text style={on ? styles.chipOnText : styles.chipText}>{v ? `Variant ${v}` : `Assigned (${experiment.assigned})`}</Text>
+            </Pressable>;
+          })}
+        </View>
+        <Text style={styles.testingNote}>Session screens (CRC Main Gym games)</Text>
+        <View style={styles.chipRow}>
+          {([['off', 'Live data'], ['reports', 'Fresh + stale courts'], ['empty', 'No reports']] as [SessionMode, string][]).map(([m, label]) => {
+            const on = experiment.sessionMode === m;
+            return <Pressable key={m} accessibilityRole="radio" accessibilityState={{ checked: on }}
+              onPress={() => { void setSessionMode(m); }} style={[styles.chip, on && styles.chipOn]}>
+              <Text style={on ? styles.chipOnText : styles.chipText}>{label}</Text>
+            </Pressable>;
+          })}
+        </View>
+      </View>
+
       <Pressable
         style={({ pressed }) => [styles.signOut, pressedStyle(pressed)]}
         onPress={() => signOut(auth)}
@@ -40,12 +73,13 @@ export default function Profile() {
         <Ionicons name="log-out-outline" size={18} color={colors.danger} />
         <Text style={styles.signOutText}>Sign out</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', paddingTop: spacing.xxl, gap: 6, backgroundColor: colors.bg },
+  scroll: { flex: 1, backgroundColor: colors.bg },
+  container: { alignItems: 'center', paddingTop: spacing.xxl, paddingBottom: spacing.xxl, gap: 6 },
   avatar: {
     width: 76,
     height: 76,
@@ -78,7 +112,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    marginTop: spacing.xxl,
+    marginTop: spacing.xl,
     borderWidth: 1,
     borderColor: colors.danger,
     borderRadius: radius.md,
@@ -86,4 +120,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   signOutText: { color: colors.danger, fontWeight: '700' },
+  testing: {
+    alignSelf: 'stretch',
+    marginTop: spacing.xl,
+    marginHorizontal: spacing.lg,
+    padding: spacing.md,
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+  },
+  testingTitle: { fontWeight: '700', color: colors.text },
+  testingNote: { color: colors.textMuted, fontSize: 13 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chip: { paddingVertical: 6, paddingHorizontal: 10, borderWidth: 1, borderColor: colors.borderStrong, borderRadius: radius.sm },
+  chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipText: { color: colors.text, fontSize: 13 },
+  chipOnText: { color: colors.primaryText, fontSize: 13, fontWeight: '600' },
 });

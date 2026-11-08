@@ -63,6 +63,8 @@ export type EventType =
   | 'game_cancelled'
   | 'checked_in'
   | 'court_reported'
+  | 'court_card_viewed'
+  | 'court_update_tapped'
   | 'game_viewed'
   | 'app_opened'
   | 'signed_up';

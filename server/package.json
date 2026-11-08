@@ -8,7 +8,9 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "export": "tsx src/scripts/export-sprint3.ts",
-    "test:courts": "tsx --test test/courts.integration.test.ts"
+    "export:s4": "tsx src/scripts/export-sprint4.ts",
+    "test:courts": "tsx --test test/courts.integration.test.ts",
+    "test:experiment": "tsx --test test/experiment.test.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",
