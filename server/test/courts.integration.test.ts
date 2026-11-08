@@ -272,3 +272,65 @@ test('game visibility preserves pre-start scope and removes ended/cancelled game
   assert.equal(visibleGames([{ ...baseGame, startTime: Timestamp.fromMillis(now - 60 * 60_000) }], 'guest', now).length, 0);
   for (const status of ['cancelled', 'completed']) assert.equal(visibleGames([{ ...baseGame, status }], 'host', now).length, 0);
 });
+
+// Sprint 4 court label A/B test.
+test('Sprint 4: session reports keep variant and trigger but never change the live court status', async () => {
+  const session = await api(endpoint + '/reports', tokenA, {
+    courtLabel: 'Session Court 9', status: 'busy', observedMinutesAgo: 5, variant: 'B', trigger: 'cta', context: 'session',
+  });
+  assert.equal(session.status, 201);
+  const saved = (await db.collection('courtReports').doc(session.body.id).get()).data()!;
+  assert.equal(saved.source, 'session');
+  assert.equal(saved.variant, 'B');
+  assert.equal(saved.trigger, 'cta');
+  const courts = (await api(endpoint, tokenB)).body.courts as { courtLabel: string }[];
+  assert.ok(!courts.some((c) => c.courtLabel === 'Session Court 9'));
+
+  const live = await api(endpoint + '/reports', tokenA, {
+    courtLabel: 'Live Court 8', status: 'available', observedMinutesAgo: 0, variant: 'A', trigger: 'row', context: 'live',
+  });
+  assert.equal(live.status, 201);
+  assert.ok(((await api(endpoint, tokenB)).body.courts as { courtLabel: string }[]).some((c) => c.courtLabel === 'Live Court 8'));
+
+  const events = (await db.collection('events').where('type', '==', 'court_reported').get()).docs.map((d) => d.data().metadata);
+  const sessionEvent = events.find((m) => m.reportId === session.body.id);
+  assert.deepEqual([sessionEvent.variant, sessionEvent.trigger, sessionEvent.context], ['B', 'cta', 'session']);
+  const liveEvent = events.find((m) => m.reportId === live.body.id);
+  assert.deepEqual([liveEvent.variant, liveEvent.trigger, liveEvent.context], ['A', 'row', 'live']);
+});
+
+test('Sprint 4: variant endpoint uses the shared hash; clients may log court card events', async () => {
+  const { variantFor } = await import('../src/services/experiment');
+  assert.equal((await api('/api/me/variant')).status, 401);
+  const mine = await api('/api/me/variant', tokenA);
+  assert.equal(mine.status, 200);
+  assert.equal(mine.body.variant, variantFor(uidA));
+  const root = `http://${process.env.FIRESTORE_EMULATOR_HOST}/v1/projects/demo-pickup-gt/databases/(default)/documents`;
+  for (const type of ['court_card_viewed', 'court_update_tapped']) {
+    const res = await fetch(`${root}/events`, { method: 'POST',
+      headers: { Authorization: `Bearer ${tokenA}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { uid: { stringValue: uidA }, type: { stringValue: type },
+        // Real client events carry serverTimestamp(); the export skips events without one.
+        timestamp: { timestampValue: new Date().toISOString() },
+        metadata: { mapValue: { fields: { variant: { stringValue: 'B' }, state: { stringValue: 'stale' }, context: { stringValue: 'session' } } } } } }) });
+    assert.equal(res.status, 200, type);
+  }
+});
+
+test('Sprint 4 export flattens variant, state, trigger and source into columns', async () => {
+  const out = await mkdtemp(join(tmpdir(), 'pickup-s4-export-'));
+  try {
+    const child = spawn(process.execPath, ['--import', 'tsx', 'src/scripts/export-sprint4.ts',
+      '--since=2026-01-01', `--out=${out}`], { env: process.env, cwd: join(__dirname, '..') });
+    let output = ''; child.stdout.on('data', b => output += b); child.stderr.on('data', b => output += b);
+    const [code] = await once(child, 'close');
+    assert.equal(code, 0, output);
+    const events = (await readFile(join(out, 'events.csv'), 'utf8')).split('\n');
+    assert.equal(events[0], 'timestamp,uid,name,type,gameId,variant,context,state,trigger,courtLabel,status,observedMinutesAgo,otherMetadata');
+    assert.ok(events.some((l) => l.includes('court_card_viewed') && l.includes(',B,session,stale,')));
+    const reports = await readFile(join(out, 'court_reports.csv'), 'utf8');
+    assert.ok(reports.includes(',session,B,cta,Session Court 9,'));
+    const summary = JSON.parse(await readFile(join(out, 'summary.json'), 'utf8')).summary;
+    assert.equal(summary.find((s: { variant: string }) => s.variant === 'B').cardViewsStale, 1);
+  } finally { await rm(out, { recursive: true, force: true }); }
+});

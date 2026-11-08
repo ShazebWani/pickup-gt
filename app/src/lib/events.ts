@@ -2,10 +2,10 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import type { EventType } from '../types';
 
-// Client only writes view, open, and signup events; mutating events are
-// written server-side alongside the mutation they describe.
+// Client only writes view, open, signup and court card view/tap events;
+// mutating events are written server-side alongside the mutation they describe.
 export async function logEvent(
-  type: Extract<EventType, 'game_viewed' | 'app_opened' | 'signed_up'>,
+  type: Extract<EventType, 'game_viewed' | 'app_opened' | 'signed_up' | 'court_card_viewed' | 'court_update_tapped'>,
   gameId: string | null = null,
   metadata: Record<string, string | number> | null = null
 ) {

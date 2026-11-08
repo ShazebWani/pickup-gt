@@ -17,12 +17,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Client logs its own view/open/signup events directly; everything else is
-    // written server-side.
+    // Client logs its own view/open/signup events and the Sprint 4 court card
+    // view/tap events directly; everything else is written server-side.
     match /events/{eventId} {
       allow create: if request.auth != null
         && request.auth.uid == request.resource.data.uid
-        && request.resource.data.type in ['game_viewed', 'app_opened', 'signed_up'];
+        && request.resource.data.type in ['game_viewed', 'app_opened', 'signed_up',
+          'court_card_viewed', 'court_update_tapped'];
       allow read, update, delete: if false;
     }
 

@@ -4,10 +4,16 @@ export const COURT_STATUS_LABELS = {
   reserved: 'Reserved / other activity', closed: 'Closed',
 } as const;
 export type CourtStatus = keyof typeof COURT_STATUS_LABELS;
+export type ReportTrigger = 'cta' | 'row' | 'menu';
+export type ReportContext = 'live' | 'session';
 export interface CourtReportPayload {
   courtLabel: string;
   status: CourtStatus;
   observedMinutesAgo: number;
+  // Sprint 4 A/B fields
+  variant?: 'A' | 'B';
+  trigger?: ReportTrigger;
+  context?: ReportContext;
 }
 export interface CourtSnapshot {
   courtId: string;
