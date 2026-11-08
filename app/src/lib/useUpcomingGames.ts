@@ -17,6 +17,7 @@ export function useUpcomingGames() {
   const { user } = useAuth();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now);
 
   useEffect(() => {
@@ -40,13 +41,20 @@ export function useUpcomingGames() {
         setGames(
           snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Game))
         );
+        setError(null);
         setLoading(false);
       },
-      () => setLoading(false)
+      (err) => {
+        // Surface listener failures (rules, missing index) instead of an
+        // empty "No games yet" list.
+        console.warn('Games list query failed:', err);
+        setError(err.message);
+        setLoading(false);
+      }
     );
 
     return unsubscribe;
   }, []);
 
-  return { games: visibleGames(games, user?.uid, now), loading };
+  return { games: visibleGames(games, user?.uid, now), loading, error };
 }

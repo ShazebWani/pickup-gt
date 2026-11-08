@@ -20,7 +20,7 @@ import { colors, radius, spacing, shadow, pressedStyle } from '../../src/theme';
 
 export default function GamesList() {
   const router = useRouter();
-  const { games, loading } = useUpcomingGames();
+  const { games, loading, error } = useUpcomingGames();
   const { coords } = useLocation();
   const [sportFilter, setSportFilter] = useState<Sport | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -89,8 +89,9 @@ export default function GamesList() {
                 <Ionicons name="basketball-outline" size={28} color={colors.textFaint} />
               </View>
               <Text style={styles.emptyTitle}>
-                {sportFilter ? 'No games for this sport' : 'No games yet'}
+                {error ? 'Could not load games' : sportFilter ? 'No games for this sport' : 'No games yet'}
               </Text>
+              {error && <Text style={styles.emptyBody}>{error}</Text>}
               <Text style={styles.emptyBody}>
                 {sportFilter
                   ? 'Try another sport or start one yourself.'
