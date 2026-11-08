@@ -310,6 +310,8 @@ test('Sprint 4: variant endpoint uses the shared hash; clients may log court car
     const res = await fetch(`${root}/events`, { method: 'POST',
       headers: { Authorization: `Bearer ${tokenA}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields: { uid: { stringValue: uidA }, type: { stringValue: type },
+        // Real client events carry serverTimestamp(); the export skips events without one.
+        timestamp: { timestampValue: new Date().toISOString() },
         metadata: { mapValue: { fields: { variant: { stringValue: 'B' }, state: { stringValue: 'stale' }, context: { stringValue: 'session' } } } } } }) });
     assert.equal(res.status, 200, type);
   }
