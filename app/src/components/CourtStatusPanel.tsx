@@ -32,6 +32,9 @@ export function CourtStatusPanel({ data, loading, error, elapsedMs, variant, con
   const [status, setStatus] = useState<CourtStatus | null>(null);
   const [observedMinutesAgo, setObservedMinutesAgo] = useState(0);
   const [trigger, setTrigger] = useState<ReportTrigger>('menu');
+  // Court the open form belongs to, so it renders under that court instead of
+  // at the bottom of the card. null = general report (form at the bottom).
+  const [formFor, setFormFor] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -59,8 +62,9 @@ export function CourtStatusPanel({ data, loading, error, elapsedMs, variant, con
     }
   }, [data, error, elapsedMs, variant, context]);
 
-  function beginReport(label: string, from: ReportTrigger, state: CardState | 'any') {
+  function beginReport(label: string, from: ReportTrigger, state: CardState | 'any', courtId: string | null = null) {
     void logEvent('court_update_tapped', null, { variant, context, trigger: from, state });
+    setFormFor(courtId);
     setCourtLabel(label);
     setStatus(null);
     setObservedMinutesAgo(0);
@@ -89,6 +93,31 @@ export function CourtStatusPanel({ data, loading, error, elapsedMs, variant, con
 
   const empty = !loading && !error && data?.courts.length === 0;
 
+  const reportForm = <View style={styles.form}>
+      <Text style={styles.strong}>Which court?</Text>
+      <Text style={styles.note}>Use the posted court number or a clear landmark. Reuse an existing court label when possible.</Text>
+      <TextInput accessibilityLabel="Court number or landmark" placeholder="e.g. Court 2" placeholderTextColor={colors.textMuted} value={courtLabel} onChangeText={setCourtLabel} editable={!saving} maxLength={40} style={styles.input} />
+      <Text style={styles.strong}>What did you see?</Text>
+      <View style={styles.row}>{(Object.keys(COURT_STATUS_LABELS) as CourtStatus[]).map((value) => <Pressable
+        key={value} accessibilityRole="radio" aria-checked={status === value} accessibilityState={{ checked: status === value, disabled: saving }}
+        disabled={saving} onPress={() => setStatus(value)} style={[styles.chip, status === value && styles.selected]}>
+        <Text style={status === value ? styles.selectedText : styles.body}>{COURT_STATUS_LABELS[value]}</Text>
+      </Pressable>)}</View>
+      <Text style={styles.strong}>When did you observe it?</Text>
+      <View style={styles.row}>{[0, 5, 15, 30, 60, 120].map((minutes) => <Pressable
+        key={minutes} accessibilityRole="radio" aria-checked={observedMinutesAgo === minutes} accessibilityState={{ checked: observedMinutesAgo === minutes, disabled: saving }}
+        disabled={saving} onPress={() => setObservedMinutesAgo(minutes)} style={[styles.chip, observedMinutesAgo === minutes && styles.selected]}>
+        <Text style={observedMinutesAgo === minutes ? styles.selectedText : styles.body}>{minutes === 0 ? 'Just now' : `${minutes} min ago`}</Text>
+      </Pressable>)}</View>
+      <Text style={styles.note}>Only submit what you personally observed. An available court may fill before you arrive.</Text>
+      {saveError && <Text accessibilityRole="alert" style={styles.error}>{saveError}</Text>}
+      <Pressable accessibilityRole="button" accessibilityState={{ disabled: !canSave }} disabled={!canSave}
+        onPress={submit} style={({ pressed }) => [styles.save, !canSave && styles.disabled, pressedStyle(pressed)]}>
+        <Text style={styles.selectedText}>{saving ? 'Saving…' : 'Save court report'}</Text>
+      </Pressable>
+      <Pressable accessibilityRole="button" disabled={saving} onPress={() => { setEditing(false); setSaveError(null); }}><Text style={styles.link}>Cancel</Text></Pressable>
+    </View>;
+
   return <View style={styles.card}>
     <Text style={styles.title}>Court updates · CRC Main Gym</Text>
     <Text style={styles.note}>Player observations of specific courts on the 4th floor. These are not reservations or official CRC updates.</Text>
@@ -115,7 +144,8 @@ export function CourtStatusPanel({ data, loading, error, elapsedMs, variant, con
           <Text style={styles.body}>{stale || error ? 'Current status unknown' : label}</Text>
           {(stale || error) && <Text style={styles.note}>Last reported: {label}{stale ? ' · Out of date' : ' · Unverified'}</Text>}
           <Text style={styles.note}>Observed {ageText(age)} ago · {new Date(court.observedAt).toLocaleString()}</Text>
-          <Pressable accessibilityRole="button" accessibilityLabel={`Update ${court.courtLabel}`} disabled={saving} onPress={() => beginReport(court.courtLabel, 'row', stale ? 'stale' : 'fresh')}><Text style={styles.link}>Update this court</Text></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel={`Update ${court.courtLabel}`} disabled={saving} onPress={() => beginReport(court.courtLabel, 'row', stale ? 'stale' : 'fresh', court.courtId)}><Text style={styles.link}>Update this court</Text></Pressable>
+          {editing && formFor === court.courtId && reportForm}
         </View>;
       }
 
@@ -133,9 +163,10 @@ export function CourtStatusPanel({ data, loading, error, elapsedMs, variant, con
             <Text style={styles.note}>Courts can fill up after a report. This is not a reservation.</Text>
           </>}
         {unknown
-          ? <Pressable accessibilityRole="button" accessibilityLabel={`Update ${court.courtLabel}`} disabled={saving} onPress={() => beginReport(court.courtLabel, 'cta', 'stale')}
+          ? <Pressable accessibilityRole="button" accessibilityLabel={`Update ${court.courtLabel}`} disabled={saving} onPress={() => beginReport(court.courtLabel, 'cta', 'stale', court.courtId)}
             style={({ pressed }) => [styles.cta, pressedStyle(pressed)]}><Text style={styles.selectedText}>Update court status</Text></Pressable>
-          : <Pressable accessibilityRole="button" accessibilityLabel={`Update ${court.courtLabel}`} disabled={saving} onPress={() => beginReport(court.courtLabel, 'row', 'fresh')}><Text style={styles.link}>Update this court</Text></Pressable>}
+          : <Pressable accessibilityRole="button" accessibilityLabel={`Update ${court.courtLabel}`} disabled={saving} onPress={() => beginReport(court.courtLabel, 'row', 'fresh', court.courtId)}><Text style={styles.link}>Update this court</Text></Pressable>}
+        {editing && formFor === court.courtId && reportForm}
       </View>;
     })}
 
@@ -145,30 +176,7 @@ export function CourtStatusPanel({ data, loading, error, elapsedMs, variant, con
       {!editing && <Pressable accessibilityRole="button" onPress={() => beginReport('', 'menu', 'any')} style={styles.chip}><Text style={styles.body}>Report what you saw</Text></Pressable>}
     </View>
     {saved && <Text accessibilityRole="alert" style={styles.body}>Report saved. The most recent observation is shown for each court.</Text>}
-    {editing && <View style={styles.form}>
-      <Text style={styles.strong}>Which court?</Text>
-      <Text style={styles.note}>Use the posted court number or a clear landmark. Reuse an existing court label when possible.</Text>
-      <TextInput accessibilityLabel="Court number or landmark" placeholder="e.g. Court 2" placeholderTextColor={colors.textMuted} value={courtLabel} onChangeText={setCourtLabel} editable={!saving} maxLength={40} style={styles.input} />
-      <Text style={styles.strong}>What did you see?</Text>
-      <View style={styles.row}>{(Object.keys(COURT_STATUS_LABELS) as CourtStatus[]).map((value) => <Pressable
-        key={value} accessibilityRole="radio" aria-checked={status === value} accessibilityState={{ checked: status === value, disabled: saving }}
-        disabled={saving} onPress={() => setStatus(value)} style={[styles.chip, status === value && styles.selected]}>
-        <Text style={status === value ? styles.selectedText : styles.body}>{COURT_STATUS_LABELS[value]}</Text>
-      </Pressable>)}</View>
-      <Text style={styles.strong}>When did you observe it?</Text>
-      <View style={styles.row}>{[0, 5, 15, 30, 60, 120].map((minutes) => <Pressable
-        key={minutes} accessibilityRole="radio" aria-checked={observedMinutesAgo === minutes} accessibilityState={{ checked: observedMinutesAgo === minutes, disabled: saving }}
-        disabled={saving} onPress={() => setObservedMinutesAgo(minutes)} style={[styles.chip, observedMinutesAgo === minutes && styles.selected]}>
-        <Text style={observedMinutesAgo === minutes ? styles.selectedText : styles.body}>{minutes === 0 ? 'Just now' : `${minutes} min ago`}</Text>
-      </Pressable>)}</View>
-      <Text style={styles.note}>Only submit what you personally observed. An available court may fill before you arrive.</Text>
-      {saveError && <Text accessibilityRole="alert" style={styles.error}>{saveError}</Text>}
-      <Pressable accessibilityRole="button" accessibilityState={{ disabled: !canSave }} disabled={!canSave}
-        onPress={submit} style={({ pressed }) => [styles.save, !canSave && styles.disabled, pressedStyle(pressed)]}>
-        <Text style={styles.selectedText}>{saving ? 'Saving…' : 'Save court report'}</Text>
-      </Pressable>
-      <Pressable accessibilityRole="button" disabled={saving} onPress={() => { setEditing(false); setSaveError(null); }}><Text style={styles.link}>Cancel</Text></Pressable>
-    </View>}
+    {editing && formFor === null && reportForm}
   </View>;
 }
 
