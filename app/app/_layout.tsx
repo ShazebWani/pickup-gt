@@ -3,6 +3,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { View, ActivityIndicator, Pressable, Text, AppState } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../src/theme';
 import { logEvent } from '../src/lib/events';
 
@@ -84,7 +85,23 @@ function RootNavigation() {
       />
       <Stack.Screen
         name="game/[id]"
-        options={{ headerShown: true, title: '' }}
+        options={{
+          headerShown: true,
+          title: '',
+          // The native back button was rendering as an empty circle with no
+          // chevron, so draw our own. Swipe-back still works.
+          headerBackVisible: false,
+          headerLeft: () => (
+            <Pressable
+              onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Back"
+            >
+              <Ionicons name="chevron-back" size={26} color={colors.text} />
+            </Pressable>
+          ),
+        }}
       />
     </Stack>
   );
